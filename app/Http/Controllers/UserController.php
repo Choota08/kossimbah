@@ -8,60 +8,106 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // GET ALL
+    /**
+     * ADMIN - GET ALL USERS
+     */
     public function index()
     {
         return response()->json(User::all(), 200);
     }
 
-    // CREATE USER
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name'     => 'required',
-            'email'    => 'required|email|unique:users',
-            'password' => 'required|min:6',
-            'phone'    => 'nullable',
-            'role'     => 'required',
-        ]);
-
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'phone'    => $request->phone,
-            'role'     => $request->role,
-        ]);
-
-        return response()->json($user, 201);
-    }
-
-    // GET ONE USER
+    /**
+     * ADMIN - GET USER BY ID
+     */
     public function show($id)
     {
-        return response()->json(User::findOrFail($id), 200);
-    }
-
-    // UPDATE USER
-    public function update(Request $request, $id)
-    {
         $user = User::findOrFail($id);
-
-        $user->update([
-            'name'     => $request->name ?? $user->name,
-            'email'    => $request->email ?? $user->email,
-            'phone'    => $request->phone ?? $user->phone,
-            'role'     => $request->role ?? $user->role,
-            'password' => $request->password ? Hash::make($request->password) : $user->password,
-        ]);
-
         return response()->json($user, 200);
     }
 
-    // DELETE USER
-    public function destroy($id)
+    /**
+     * USER - GET PROFILE SENDIRI (LOGIN)
+     */
+    public function profile(Request $request)
     {
-        User::destroy($id);
-        return response()->json(['message' => 'User deleted'], 200);
+        return response()->json([
+            'user' => $request->user()
+        ], 200);
+    }
+
+    /**
+     * USER - UPDATE PROFILE (LOGIN)
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $user->update($data);
+
+        return response()->json([
+            'message' => 'Profil berhasil diperbarui',
+            'user'    => $user
+        ], 200);
+    }
+
+    /**
+     * USER - CHANGE PASSWORD (LOGIN)
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password'     => 'required|min:6|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        // cek password lama
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Password lama salah'
+            ], 422);
+        }
+
+        // update password
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return response()->json([
+            'message' => 'Password berhasil diperbarui'
+        ], 200);
+    }
+
+    /**
+     * REGISTER (PUBLIC)
+     */
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|min:6|confirmed',
+            'phone'    => 'nullable|string|max:20',
+        ]);
+
+        $user = User::create([
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => Hash::make($data['password']),
+            'phone'    => $data['phone'] ?? null,
+            'role'     => 'user',
+        ]);
+
+        return response()->json([
+            'message' => 'Register berhasil',
+            'user'    => $user
+        ], 201);
     }
 }

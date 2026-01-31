@@ -7,20 +7,21 @@ use Illuminate\Http\Request;
 
 class KosFacilityController extends Controller
 {
+    // CREATE
     public function store(Request $request)
     {
-        $request->validate([
-            'kos_id' => 'required',
-            'facility' => 'required'
+        return KosFacility::create([
+            'kos_id' => $request->kos_id,
+            'facility' => $request->facility
         ]);
-
-        return KosFacility::create($request->all());
     }
 
+    // DELETE
     public function destroy($id)
     {
-        KosFacility::destroy($id);
-        return ['message' => 'Facility deleted'];
+        KosFacility::findOrFail($id)->delete();
+        return response()->json(['message' => 'Facility deleted']);
     }
 }
+
 

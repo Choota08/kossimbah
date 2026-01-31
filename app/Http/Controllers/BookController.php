@@ -7,34 +7,32 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    public function index()
-    {
-        return Book::with(['kos', 'user'])->get();
-    }
-
+    // CREATE (USER BOOK KOS)
     public function store(Request $request)
     {
-        $request->validate([
-            'kos_id' => 'required',
-            'user_id' => 'required',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date',
-            'status' => 'required|in:pending,accept,reject'
+        return Book::create([
+            'kos_id' => $request->kos_id,
+            'user_id' => $request->user_id,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'status' => 'pending'
         ]);
-
-        return Book::create($request->all());
     }
 
-    public function update(Request $request, $id)
+    // UPDATE STATUS (OWNER)
+    public function updateStatus(Request $request, $id)
     {
-        $book = Book::findOrFail($id);
-        $book->update($request->all());
-        return $book;
+        $booking = Book::findOrFail($id);
+        $booking->status = $request->status;
+        $booking->save();
+
+        return response()->json($booking);
     }
 
+    // DELETE
     public function destroy($id)
     {
-        Book::destroy($id);
-        return ['message' => 'Book deleted'];
+        Book::findOrFail($id)->delete();
+        return response()->json(['message' => 'Booking deleted']);
     }
 }

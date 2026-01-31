@@ -7,21 +7,30 @@ use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
+    // CREATE
     public function store(Request $request)
     {
-        $request->validate([
-            'kos_id' => 'required',
-            'user_id' => 'required',
-            'comment' => 'required'
+        return Review::create([
+            'kos_id' => $request->kos_id,
+            'user_id' => $request->user_id,
+            'comment' => $request->comment
         ]);
-
-        return Review::create($request->all());
     }
 
+    // UPDATE
+    public function update(Request $request, $id)
+    {
+        $review = Review::findOrFail($id);
+        $review->update(['comment' => $request->comment]);
+
+        return response()->json($review);
+    }
+
+    // DELETE
     public function destroy($id)
     {
-        Review::destroy($id);
-        return ['message' => 'Review deleted'];
+        Review::findOrFail($id)->delete();
+        return response()->json(['message' => 'Review deleted']);
     }
 }
 
