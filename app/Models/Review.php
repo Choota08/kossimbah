@@ -3,10 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Kos;
+use App\Models\User;
 
 class Review extends Model
 {
-    protected $fillable = ['kos_id', 'user_id', 'comment'];
+    protected $table = 'reviews';
+
+    protected $fillable = [
+        'kos_id',
+        'user_id',
+        'comment'
+    ];
 
     public function kos()
     {
@@ -18,4 +26,3 @@ class Review extends Model
         return $this->belongsTo(User::class);
     }
 }
-

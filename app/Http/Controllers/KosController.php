@@ -9,37 +9,71 @@ class KosController extends Controller
 {
     public function index()
     {
-        return Kos::with(['images', 'facilities', 'reviews'])->get();
+        $kos = Kos::with(['images', 'facilities'])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $kos
+        ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required',
-            'name' => 'required',
-            'address' => 'required',
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+            'name' => 'required|string',
+            'address' => 'required|string',
             'price_per_month' => 'required|numeric',
-            'gender' => 'required'
+            'gender' => 'required|string'
         ]);
 
-        return Kos::create($request->all());
+        $kos = Kos::create($validated);
+
+        return response()->json([
+            'status' => true,
+            'data' => $kos
+        ], 201);
     }
 
     public function show($id)
     {
-        return Kos::with(['images', 'facilities', 'reviews'])->findOrFail($id);
+        $kos = Kos::with(['images', 'facilities', 'reviews.user'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'status' => true,
+            'data' => $kos
+        ]);
     }
 
     public function update(Request $request, $id)
     {
         $kos = Kos::findOrFail($id);
-        $kos->update($request->all());
-        return $kos;
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string',
+            'address' => 'sometimes|string',
+            'price_per_month' => 'sometimes|numeric',
+            'gender' => 'sometimes|string'
+        ]);
+
+        $kos->update($validated);
+
+        return response()->json([
+            'status' => true,
+            'data' => $kos
+        ]);
     }
 
     public function destroy($id)
     {
         Kos::destroy($id);
-        return ['message' => 'Kos deleted'];
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Kos deleted'
+        ]);
     }
 }
